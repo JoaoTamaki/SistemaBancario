@@ -23,14 +23,9 @@ Operação de extrato:
     Os valores devem ser exibidos utilizando o formato R$ xxx.xx, exemplo:
         1500.45 = R$ 1500.45
 
-Explicando arquivo usuarios.csv:
+Explicando arquivo users.db:
 
-    Colunas de cadastro(nome,data_nascimento,cpf,logradouro,numero,bairro,cidade_estado,usuario,senha)
-    Após essas colunas estão:
-        data_ultimo_login: data em que foi atualizado o login de cada usuário pela ultima vez
-        num_saques_disponivel: número de saques disponíveis do dia para cada usuário
-        saldo: saldo de cada usuário
-        extrato: é nome do arquivo de log do extrato
+    Database file criado a partir da biblioteca sqlite3
 
 Explicando arquivo usuario_YYY.txt:
 
