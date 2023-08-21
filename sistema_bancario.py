@@ -1,14 +1,18 @@
-import tkinter
 from datetime import date
 import datetime
 
 import pandas as pd
+import Banco
+from decimal import Decimal
 
 from Usuarios import Usuarios
+import tkinter
 from tkinter import *
+from tkinter import messagebox
 
 
 class Application:
+
     def __init__(self, master=None):
 
         self.arquivo = "usuarios.csv"
@@ -23,6 +27,8 @@ class Application:
         self.arquivo_extrato = None
 
         self.root = Tk()
+        self.root.title("Janela de Acesso")
+        self.root.resizable(width=False, height=False)
         self.fonte = ("Verdana", "8")
 
         self.root.container15 = Frame(master)
@@ -37,13 +43,16 @@ class Application:
         self.mensagem["font"] = ("Calibri", "9", "bold")
         self.mensagem.pack()
 
-        self.botao_criar_conta = Button(self.root.container16, text="Criar Conta", font=self.fonte, command=self.tela_criar_usuario)
+        self.botao_criar_conta = Button(self.root.container16, text="Criar Conta", font=self.fonte,
+                                        command=self.tela_criar_usuario)
         self.botao_criar_conta.pack(side=LEFT)
 
-        self.botao_login = Button(self.root.container16, text="Fazer Login", font=self.fonte, command=self.tela_fazer_login)
+        self.botao_login = Button(self.root.container16, text="Fazer Login", font=self.fonte,
+                                  command=self.tela_fazer_login)
         self.botao_login.pack(side=LEFT)
 
-        self.botao_sair = Button(self.root.container16, text="Sair", font=self.fonte, command=self.root.destroy)
+        self.botao_sair = Button(self.root.container16, text="Sair", font=self.fonte,
+                                 command=self.root.destroy)
         self.botao_sair.pack(side=RIGHT)
 
         self.root.mainloop()
@@ -56,29 +65,25 @@ class Application:
                 self.extrato.append(linha)
                 linha = f.readline().split('\n')[0]
 
-
     def save_info_usuario(self):
-
-        df = pd.read_csv(self.arquivo)
-        for j in range(len(df.index)):
-            i = df.iloc[j]
-            if self.usuario == i['usuario']:
-                df.loc[j, ['data_ultimo_login']] = [date.today().strftime("%d/%m/%Y")]
-                df.loc[j, ['num_saques_disponivel']] = [self.num_saques_disponivel]
-                df.loc[j, ['saldo']] = [self.saldo]
-        df.to_csv(self.arquivo, index = False)
+        Banco.cursor.execute("""
+            UPDATE Usuarios
+            SET Data_ultimo_login=?, Num_saques_disponivel=?, Saldo=?
+            WHERE Usuario=?
+        """, (self.data_ultimo_login, self.num_saques_disponivel, str(self.saldo), self.usuario))
+        Banco.conn.commit()
+        messagebox.showinfo(title="Transation Info", message="Operação realizada com sucesso!")
 
         with open(self.arquivo_extrato, "w") as f:
             for i in range(len(self.extrato)):
                 f.write(self.extrato[i] + '\n')
 
     def realiza_deposito(self):
-        valor = self.root3.txt_deposito.get()
-        valor = round(float(valor), 2)
+        valor = Decimal(self.root3.txt_deposito.get())
         # somente valores positivos
         if valor > 0:
             # deposito deve ser armazenado em uma variável
-            self.saldo = round(self.saldo + valor - 0.005, 2)
+            self.saldo = round(float(Decimal(str(self.saldo)) + Decimal(valor)), 2)
             data = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
             print(self.extrato)
             print(type(self.extrato))
@@ -96,7 +101,8 @@ class Application:
             self.root3.destroy()
             self.root2.destroy()
             self.tela_operacoes_bancarias()
-            self.root2.lbl_mensagem = Label(self.root2.container_2_1, text='Operação falhou! O valor informado é inválido.')
+            self.root2.lbl_mensagem = Label(self.root2.container_2_1,
+                                            text='Operação falhou!O valor informado é inválido.')
             self.root2.lbl_mensagem["font"] = ("Calibri", "9", "bold")
             self.root2.lbl_mensagem.pack()
 
@@ -107,7 +113,8 @@ class Application:
             self.root2.destroy()
             self.tela_operacoes_bancarias()
             self.root2.lbl_mensagem = Label(self.root2.container_2_1,
-                                            text='Você excedeu o limite de quantidade de saques hoje. Por favor, volte amanhã ou fale com o gerente.')
+                                            text='Você excedeu o limite de quantidade de saques hoje. Por favor,'
+                                                 'volte amanhã ou fale com o gerente.')
             self.root2.lbl_mensagem["font"] = ("Calibri", "9", "bold")
             self.root2.lbl_mensagem.pack()
         else:
@@ -119,7 +126,8 @@ class Application:
                 self.root3.destroy()
                 self.root2.destroy()
                 self.tela_operacoes_bancarias()
-                self.root2.lbl_mensagem = Label(self.root2.container_2_1, text='Não foi possível sacar o dinheiro por falta de saldo.')
+                self.root2.lbl_mensagem = Label(self.root2.container_2_1,
+                                                text='Não foi possível sacar o dinheiro por falta de saldo.')
                 self.root2.lbl_mensagem["font"] = ("Calibri", "9", "bold")
                 self.root2.lbl_mensagem.pack()
             elif valor_saque > self.limite_valor_saque:
@@ -127,12 +135,14 @@ class Application:
                 self.root3.destroy()
                 self.root2.destroy()
                 self.tela_operacoes_bancarias()
-                self.root2.lbl_mensagem = Label(self.root2.container_2_1, text='Você excedeu o seu limite de valor por saque: R$500,00. Tente novamente com um valor mais baixo.')
+                self.root2.lbl_mensagem = Label(self.root2.container_2_1,
+                                                text='Você excedeu o seu limite de valor por saque: R$500,00.'
+                                                     'Tente novamente com um valor mais baixo.')
                 self.root2.lbl_mensagem["font"] = ("Calibri", "9", "bold")
                 self.root2.lbl_mensagem.pack()
             elif valor_saque > 0:
                 # saque deve ser armazenado em uma variável
-                self.saldo = round(self.saldo - valor_saque, 2)
+                self.saldo = round(float(Decimal(str(self.saldo)) - Decimal(valor_saque)), 2)
                 data = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
                 self.extrato.append(f"{data} Saque: R$ {valor_saque:.2f}")
                 self.num_saques_disponivel -= 1
@@ -167,7 +177,9 @@ class Application:
         user.senha = self.root1.txt_senha.get()
         user.conf_senha = self.root1.txt_conf_senha.get()
 
-        if user.senha == user.conf_senha:
+        if (user.senha == user.conf_senha and user.nome != "" and user.data_nascimento != ""
+                and user.cpf != "" and user.logradouro != "" and user.numero != "" and user.bairro != ""
+                and user.cidade_estado != "" and user.usuario != "" and user.senha != "" and user.conf_senha != ""):
             user.save()
             self.root1.txt_nome.delete(0, END)
             self.root1.txt_data_nascimento.delete(0, END)
@@ -179,28 +191,32 @@ class Application:
             self.root1.txt_usuario.delete(0, END)
             self.root1.txt_senha.delete(0, END)
             self.root1.txt_conf_senha.delete(0, END)
+        else:
+            messagebox.showerror(title="Register Error", message="Não deixe campos vazios! Preencha todos os campos!")
 
     def verificar_senha(self):
 
         usuario = self.root0.txt_usuario_login.get()
         senha = self.root0.txt_senha_login.get()
-        df = pd.read_csv(self.arquivo)
 
-        for j in range(len(df.index)):
-            i = df.iloc[j]
-            if usuario == i['usuario'] and senha == i['senha']:
+        Banco.cursor.execute("""
+            SELECT * FROM Usuarios
+            WHERE (Usuario = ? AND Senha = ?) 
+        """, (usuario, senha))
+        verify_login = Banco.cursor.fetchone()
+        (*_, self.usuario, self.senha, self.data_ultimo_login, self.num_saques_disponivel,
+         self.saldo, self.extrato) = verify_login
+        try:
+            if usuario in verify_login and senha in verify_login:
+                messagebox.showinfo(title="Login Info", message="Acesso Confirmado. Bem vindo!")
+        except:
+            messagebox.showinfo(title="Login Info", message="Acesso Negado. Verifique os dados de"
+                                                            "entrada ou se não tem cadastro ainda.")
 
-                self.usuario = i['usuario']
-                self.data_ultimo_login = i['data_ultimo_login']
-                if self.data_ultimo_login != str(date.today().strftime("%d/%m/%Y")):
-                    self.num_saques_disponivel = self.limite_saques
-                else:
-                    self.num_saques_disponivel = i['num_saques_disponivel']
-                self.saldo = i['saldo']
-                self.arquivo_extrato = (i['extrato'])
-                self.load_extrato_usuario()
-                self.tela_operacoes_bancarias()
-                print('Login efetuado com sucesso!')
+        self.arquivo_extrato = self.extrato
+        self.load_extrato_usuario()
+        self.tela_operacoes_bancarias()
+        print('Login efetuado com sucesso!')
 
 # Telas
 # 1
@@ -208,7 +224,7 @@ class Application:
         self.root1 = Toplevel()
         self.root1.title('Crir Usuário')
         self.root1.geometry("800x400")
-        self.root1.resizable(False, False)
+        self.root1.resizable(width=False, height=False)
         self.root1.grab_set()
 
         self.root1.container1 = Frame(self.root1)
@@ -267,7 +283,8 @@ class Application:
         self.root1.txt_nome.pack(side=LEFT)
 
         # Data de Nascimento
-        self.root1.lbl_data_nascimento = Label(self.root1.container3, text="Data de Nascimento:", font=self.fonte, width=20)
+        self.root1.lbl_data_nascimento = Label(self.root1.container3, text="Data de Nascimento:", font=self.fonte,
+                                               width=20)
         self.root1.lbl_data_nascimento.pack(side=LEFT)
         self.root1.txt_data_nascimento = Entry(self.root1.container3)
         self.root1.txt_data_nascimento["width"] = 15
@@ -342,10 +359,12 @@ class Application:
         self.root1.txt_conf_senha["font"] = self.fonte
         self.root1.txt_conf_senha.pack(side=LEFT)
 
-        self.root1.botao_criar = Button(self.root1.container10, text="Criar", font=self.fonte, width=12, command=self.criar_usuario)
+        self.root1.botao_criar = Button(self.root1.container10, text="Criar", font=self.fonte, width=12,
+                                        command=self.criar_usuario)
         self.root1.botao_criar.pack(side=LEFT)
 
-        self.root1.botao_voltar = Button(self.root1.container10, text="Voltar", font=self.fonte, width=12, command=self.root1.destroy)
+        self.root1.botao_voltar = Button(self.root1.container10, text="Voltar", font=self.fonte, width=12,
+                                         command=self.root1.destroy)
         self.root1.botao_voltar.pack(side=LEFT)
 
         self.root1.lbl_msg = Label(self.root1.container11, text="", font=("Verdana", "9", "italic"))
@@ -357,7 +376,7 @@ class Application:
         self.root0 = Toplevel()
         self.root0.title('Fazer Login')
         self.root0.geometry("400x200")
-        self.root0.resizable(False, False)
+        self.root0.resizable(width=False, height=False)
         self.root0.grab_set()
 
         self.root0.container61 = Frame(self.root0)
@@ -395,13 +414,16 @@ class Application:
         self.root0.txt_senha_login["font"] = self.fonte
         self.root0.txt_senha_login.pack(side=LEFT)
 
-        self.root0.botao_login = Button(self.root0.container64, text="Entrar", font=self.fonte, command=self.verificar_senha)
+        self.root0.botao_login = Button(self.root0.container64, text="Entrar", font=self.fonte,
+                                        command=self.verificar_senha)
         self.root0.botao_login.pack(side=LEFT)
 
-        self.root0.botao_criar_conta = Button(self.root0.container64, text="Criar Conta", font=self.fonte, command=self.tela_criar_usuario)
+        self.root0.botao_criar_conta = Button(self.root0.container64, text="Criar Conta", font=self.fonte,
+                                              command=self.tela_criar_usuario)
         self.root0.botao_criar_conta.pack(side=LEFT)
 
-        self.root0.botao_volte_menu = Button(self.root0.container64, text="Sair", font=self.fonte, command=self.root0.destroy)
+        self.root0.botao_volte_menu = Button(self.root0.container64, text="Sair", font=self.fonte,
+                                             command=self.root0.destroy)
         self.root0.botao_volte_menu.pack(side=RIGHT)
 
 # 3
@@ -411,7 +433,7 @@ class Application:
         self.root3.title('Depósito')
         self.root3.configure(background='lightblue')
         self.root3.geometry("510x40")
-        self.root3.resizable(False, False)
+        self.root3.resizable(width=False, height=False)
         self.root3.transient(self.root2)
         self.root3.grab_set()
 
@@ -427,10 +449,12 @@ class Application:
         self.root3.txt_deposito["font"] = self.fonte
         self.root3.txt_deposito.pack(side=LEFT)
 
-        self.root3.botao_voltar = Button(self.root3.container20, text="Voltar", font=self.fonte, command=self.root3.destroy)
+        self.root3.botao_voltar = Button(self.root3.container20, text="Voltar", font=self.fonte,
+                                         command=self.root3.destroy)
         self.root3.botao_voltar.pack(side=RIGHT)
 
-        self.root3.botao_depositar = Button(self.root3.container20, text="Depositar", font=self.fonte, command=self.realiza_deposito)
+        self.root3.botao_depositar = Button(self.root3.container20, text="Depositar", font=self.fonte,
+                                            command=self.realiza_deposito)
         self.root3.botao_depositar.pack(side=RIGHT)
 
 # 3
@@ -440,7 +464,7 @@ class Application:
         self.root3.title('Saque')
         self.root3.configure(background='lightblue')
         self.root3.geometry("490x40")
-        self.root3.resizable(False, False)
+        self.root3.resizable(width=False, height=False)
         self.root3.transient(self.root2)
         self.root3.grab_set()
 
@@ -456,17 +480,19 @@ class Application:
         self.root3.txt_saque["font"] = self.fonte
         self.root3.txt_saque.pack(side=LEFT)
 
-        self.root3.botao_voltar = Button(self.root3.container20, text="Voltar", font=self.fonte, command=self.root3.destroy)
+        self.root3.botao_voltar = Button(self.root3.container20, text="Voltar", font=self.fonte,
+                                         command=self.root3.destroy)
         self.root3.botao_voltar.pack(side=RIGHT)
 
-        self.root3.botao_sacar = Button(self.root3.container20, text="Sacar", font=self.fonte, command=self.realiza_saque)
+        self.root3.botao_sacar = Button(self.root3.container20, text="Sacar", font=self.fonte,
+                                        command=self.realiza_saque)
         self.root3.botao_sacar.pack(side=RIGHT)
 
     def tela_extrato(self):
         self.root3 = Toplevel()
         self.root3.title('Extrato')
         self.root3.geometry("400x400")
-        self.root3.resizable(False, False)
+        self.root3.resizable(width=False, height=False)
         self.root3.transient(self.root2)
         self.root3.grab_set()
 
@@ -493,7 +519,7 @@ class Application:
         self.root2.title('Operações Bancárias')
         self.root2.configure(background='lightblue')
         self.root2.geometry("600x400")
-        self.root2.resizable(False, False)
+        self.root2.resizable(width=False, height=False)
         self.root2.transient(self.root0)
         self.root2.grab_set()
 
@@ -510,7 +536,6 @@ class Application:
         self.root2.mensagem["font"] = ("Calibri", "9", "bold")
         self.root2.mensagem.pack()
 
-
         self.root2.botao_deposito = tkinter.Button(self.root2, text='Depósito', command=self.tela_deposito)
         self.root2.botao_deposito.place(relx=0.3, rely=0.3)
         self.root2.botao_saque = tkinter.Button(self.root2, text='Saque', command=self.tela_saque)
@@ -519,6 +544,7 @@ class Application:
         self.root2.botao_extrato.place(relx=0.7, rely=0.3)
         self.root2.botao_sair = tkinter.Button(self.root2, text='Sair', command=self.root2.destroy)
         self.root2.botao_sair.place(relx=0.7, rely=0.7)
+
 
 def main():
 
