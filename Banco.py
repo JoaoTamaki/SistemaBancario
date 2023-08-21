@@ -20,9 +20,3 @@ CREATE TABLE IF NOT EXISTS Usuarios (
     Extrato TEXT NOT NULL
 );
 """)
-
-# conn.commit()
-
-# cursor.execute("""
-
-# """)

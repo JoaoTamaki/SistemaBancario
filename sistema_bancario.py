@@ -1,7 +1,6 @@
 from datetime import date
 import datetime
 
-import pandas as pd
 import Banco
 from decimal import Decimal
 
@@ -15,7 +14,6 @@ class Application:
 
     def __init__(self, master=None):
 
-        self.arquivo = "usuarios.csv"
         self.limite_valor_saque = 500
         self.limite_saques = 3
 
@@ -212,6 +210,9 @@ class Application:
         except:
             messagebox.showinfo(title="Login Info", message="Acesso Negado. Verifique os dados de"
                                                             "entrada ou se não tem cadastro ainda.")
+
+        if self.data_ultimo_login != str(date.today().strftime("%d/%m/%Y")):
+            self.num_saques_disponivel = self.limite_saques
 
         self.arquivo_extrato = self.extrato
         self.load_extrato_usuario()
