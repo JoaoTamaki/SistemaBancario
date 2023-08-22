@@ -2,7 +2,7 @@ from datetime import date
 import datetime
 
 
-def realiza_deposito(saldo, extrato):
+def realiza_deposito(saldo, extrato, /):
     valor = round(float(input("Informe o valor do depósito: ")), 2)
 # somente valores positivos
     if valor > 0:
@@ -15,7 +15,7 @@ def realiza_deposito(saldo, extrato):
     return saldo
 
 
-def realiza_saque(saldo, extrato, num_saques_disponivel, limite_valor_saque):
+def realiza_saque(*, saldo, extrato, num_saques_disponivel, limite_valor_saque):
     if num_saques_disponivel == 0:
         # se excedeu o número de saques do dia
         print("Você excedeu o limite de quantidade de saques hoje. Por favor, volte amanhã ou fale com o gerente.")
@@ -40,7 +40,7 @@ def realiza_saque(saldo, extrato, num_saques_disponivel, limite_valor_saque):
     return saldo, num_saques_disponivel
 
 
-def imprime_extrato(saldo, extrato):
+def imprime_extrato(saldo, /, *, extrato):
     print("\n================ EXTRATO ================")
     for i in range(len(extrato)):
         print(extrato[i])
@@ -95,9 +95,11 @@ def main():
         if opcao == "d":
             saldo = realiza_deposito(saldo, extrato)
         elif opcao == "s":
-            saldo, num_saques_disponivel = realiza_saque(saldo, extrato, num_saques_disponivel, limite_valor_saque)
+            saldo, num_saques_disponivel = realiza_saque(saldo=saldo, extrato=extrato,
+                                                         num_saques_disponivel=num_saques_disponivel,
+                                                         limite_valor_saque=limite_valor_saque)
         elif opcao == "e":
-            imprime_extrato(saldo, extrato)
+            imprime_extrato(saldo, extrato=extrato)
         elif opcao == "q":
             save_info_usuario(arquivo, num_saques_disponivel, saldo, extrato)
             break
