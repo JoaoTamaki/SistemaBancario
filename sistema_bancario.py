@@ -176,22 +176,32 @@ class Application:
         user.senha = self.root1.txt_senha.get()
         user.conf_senha = self.root1.txt_conf_senha.get()
 
-        if (user.senha == user.conf_senha and user.nome != "" and user.data_nascimento != ""
-                and user.cpf != "" and user.logradouro != "" and user.numero != "" and user.bairro != ""
-                and user.cidade_estado != "" and user.usuario != "" and user.senha != "" and user.conf_senha != ""):
-            user.save()
-            self.root1.txt_nome.delete(0, END)
-            self.root1.txt_data_nascimento.delete(0, END)
-            self.root1.txt_cpf.delete(0, END)
-            self.root1.txt_logradouro.delete(0, END)
-            self.root1.txt_numero.delete(0, END)
-            self.root1.txt_bairro.delete(0, END)
-            self.root1.txt_cidade_estado.delete(0, END)
-            self.root1.txt_usuario.delete(0, END)
-            self.root1.txt_senha.delete(0, END)
-            self.root1.txt_conf_senha.delete(0, END)
+        status = 0
+        for row in Banco.cursor.execute('SELECT * FROM Usuarios WHERE Cpf = ?', (user.cpf,)):
+            status = 1
         else:
-            messagebox.showerror(title="Register Error", message="Não deixe campos vazios! Preencha todos os campos!")
+            if status == 1:
+                messagebox.showerror(title="Register Error",
+                                     message="CPF já cadastrado!")
+            else:
+                if (user.senha == user.conf_senha and user.nome != "" and user.data_nascimento != ""
+                        and user.cpf != "" and user.logradouro != "" and user.numero != "" and user.bairro != ""
+                        and user.cidade_estado != "" and user.usuario != "" and user.senha != ""
+                        and user.conf_senha != ""):
+                    user.save()
+                    self.root1.txt_nome.delete(0, END)
+                    self.root1.txt_data_nascimento.delete(0, END)
+                    self.root1.txt_cpf.delete(0, END)
+                    self.root1.txt_logradouro.delete(0, END)
+                    self.root1.txt_numero.delete(0, END)
+                    self.root1.txt_bairro.delete(0, END)
+                    self.root1.txt_cidade_estado.delete(0, END)
+                    self.root1.txt_usuario.delete(0, END)
+                    self.root1.txt_senha.delete(0, END)
+                    self.root1.txt_conf_senha.delete(0, END)
+                else:
+                    messagebox.showerror(title="Register Error", message="Não deixe campos vazios!"
+                                                                         "Preencha todos os campos!")
 
     def verificar_senha(self):
 
