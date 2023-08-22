@@ -16,6 +16,7 @@ class Application:
 
         self.limite_valor_saque = 500
         self.limite_saques = 3
+        self.agencia = "0001"
 
         self.usuario = None
         self.data_ultimo_login = None
